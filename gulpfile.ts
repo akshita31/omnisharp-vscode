@@ -81,6 +81,14 @@ gulp.task('install', ['clean'], () => {
         });
 });
 
+gulp.task('unpackage:vsix', () => { 
+    util.setExtensionPath(__dirname); 
+    const packageJSON = getPackageJSON(); 
+    const name = packageJSON.name;
+    const version = packageJSON.version; 
+    const packageName = `${name}-${version}.vsix`; 
+}); 
+
 /// Packaging (VSIX) Tasks
 function doPackageSync(packageName?) {
 
