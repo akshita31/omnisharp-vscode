@@ -19,6 +19,7 @@ import * as path from 'path';
 import * as platform from './src/platform';
 import * as util from './src/common';
 import * as vsce from 'vsce';
+import * as unzip from 'unzip2';
 
 import { CsharpLoggerObserver } from './src/observers/CsharpLoggerObserver';
 import { EventStream } from './src/EventStream';
@@ -86,7 +87,8 @@ gulp.task('unpackage:vsix', () => {
     const packageJSON = getPackageJSON(); 
     const name = packageJSON.name;
     const version = packageJSON.version; 
-    const packageName = `${name}-${version}.vsix`; 
+    const packageName = `${name}-${version}.vsix`;
+    fs.createReadStream(packageName).pipe(unzip.Extract({ path: 'output/path' }));
 }); 
 
 /// Packaging (VSIX) Tasks
