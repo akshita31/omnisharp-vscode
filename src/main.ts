@@ -31,6 +31,8 @@ import CSharpExtensionExports from './CSharpExtensionExports';
 import { Options } from './omnisharp/options';
 import { vscodeNetworkSettingsProvider, NetworkSettingsProvider } from './NetworkSettings';
 import { ErrorMessageObserver } from './observers/ErrorMessageObserver';
+import MessageItemWithCommand from './observers/MessageItemWithCommand';
+import ShowWarningMessage from './observers/ShowWarningMessage';
 
 export async function activate(context: vscode.ExtensionContext): Promise<CSharpExtensionExports> {
 
@@ -62,7 +64,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<CSharp
     eventStream.subscribe(omnisharpLogObserver.post);
     eventStream.subscribe(omnisharpChannelObserver.post);
 
-    let warningMessageObserver = new WarningMessageObserver(vscode, () => Options.Read(vscode).disableMSBuildDiagnosticWarning || false);
+    let warningMessageSink = (message: string, ...items: MessageItemWithCommand[]) => ShowWarningMessage(vscode, message, ...items);
+    let warningMessageObserver = new WarningMessageObserver(warningMessageSink, () => Options.Read(vscode).disableMSBuildDiagnosticWarning || false);
     eventStream.subscribe(warningMessageObserver.post);
 
     let informationMessageObserver = new InformationMessageObserver(vscode);

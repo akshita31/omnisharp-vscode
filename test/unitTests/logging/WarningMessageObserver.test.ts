@@ -15,6 +15,8 @@ import 'rxjs/add/operator/timeout';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/observable/timer';
 import { Subject } from 'rxjs/Subject';
+import MessageItemWithCommand from '../../../src/observers/MessageItemWithCommand';
+import ShowWarningMessage from '../../../src/observers/ShowWarningMessage';
 
 chaiUse(require('chai-as-promised'));
 chaiUse(require('chai-string'));
@@ -35,6 +37,7 @@ suite('WarningMessageObserver', () => {
     let assertionObservable: Subject<string>;
     let observer: WarningMessageObserver;
     let vscode: vscode = getFakeVsCode();
+    let warningMessageSink: (message: string, ...items: MessageItemWithCommand[]) => Promise<void>;
 
     vscode.window.showWarningMessage = async <T>(message: string, ...items: T[]) => {
         warningMessages.push(message);
@@ -60,7 +63,8 @@ suite('WarningMessageObserver', () => {
         assertionObservable = new Subject<string>();
         scheduler = new TestScheduler(assert.deepEqual);
         scheduler.maxFrames = 9000;
-        observer = new WarningMessageObserver(vscode, () => false, scheduler);
+        warningMessageSink = (message: string, ...items: MessageItemWithCommand[]) => ShowWarningMessage(vscode, message, ...items);
+        observer = new WarningMessageObserver(warningMessageSink, () => false, scheduler);
         warningMessages = [];
         invokedCommand = undefined;
         commandDone = new Promise<void>(resolve => {
@@ -82,7 +86,7 @@ suite('WarningMessageObserver', () => {
     });
 
     test('OmnisharpServerMsBuildProjectDiagnostics: No event is posted if warning is disabled', () => {
-        let newObserver = new WarningMessageObserver(vscode, () => true, scheduler);
+        let newObserver = new WarningMessageObserver(warningMessageSink, () => true, scheduler);
         let event = getOmnisharpMSBuildProjectDiagnosticsEvent("someFile",
             [getMSBuildDiagnosticsMessage("warningFile", "", "", 0, 0, 0, 0)],
             [getMSBuildDiagnosticsMessage("warningFile", "", "", 0, 0, 0, 0)]);
