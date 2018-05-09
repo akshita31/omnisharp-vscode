@@ -64,8 +64,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<CSharp
     eventStream.subscribe(omnisharpLogObserver.post);
     eventStream.subscribe(omnisharpChannelObserver.post);
 
-    let warningMessageSink = (message: string, ...items: MessageItemWithCommand[]) => ShowWarningMessage(vscode, message, ...items);
-    let warningMessageObserver = new WarningMessageObserver(warningMessageSink, () => Options.Read(vscode).disableMSBuildDiagnosticWarning || false);
+    let warningMessageObserver = new WarningMessageObserver(() => Options.Read(vscode).disableMSBuildDiagnosticWarning || false);
+    warningMessageObserver.subscribe(async event => {
+        let message = "Some projects have trouble loading. Please review the output for more details.";
+        await ShowWarningMessage(vscode, message, { title: "Show Output", command: 'o.showOutput' });
+    });
     eventStream.subscribe(warningMessageObserver.post);
 
     let informationMessageObserver = new InformationMessageObserver(vscode);
@@ -101,7 +104,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<CSharp
 
     let networkSettingsProvider = vscodeNetworkSettingsProvider(vscode);
     let runtimeDependenciesExist = await ensureRuntimeDependencies(extension, eventStream, platformInfo, networkSettingsProvider);
-    
+
     // activate language services
     let omniSharpPromise = OmniSharp.activate(context, eventStream, extension.packageJSON, platformInfo, networkSettingsProvider);
 
@@ -126,7 +129,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<CSharp
     };
 }
 
-async function ensureRuntimeDependencies(extension: vscode.Extension<CSharpExtensionExports>, eventStream: EventStream, platformInfo: PlatformInformation, networkSettingsProvider : NetworkSettingsProvider): Promise<boolean> {
+async function ensureRuntimeDependencies(extension: vscode.Extension<CSharpExtensionExports>, eventStream: EventStream, platformInfo: PlatformInformation, networkSettingsProvider: NetworkSettingsProvider): Promise<boolean> {
     return util.installFileExists(util.InstallFileType.Lock)
         .then(exists => {
             if (!exists) {

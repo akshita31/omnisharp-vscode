@@ -7,17 +7,27 @@ import { BaseEvent, OmnisharpServerOnError, OmnisharpServerMsBuildProjectDiagnos
 import { Scheduler } from 'rxjs/Scheduler';
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/debounceTime';
-import MessageItemWithCommand from "./MessageItemWithCommand";
+import 'rxjs/add/operator/filter';
+import { Subscribable } from "rxjs/Observable";
+import { Observable } from "rxjs/Observable";
+import { NextObserver, ErrorObserver, CompletionObserver } from "rxjs/Observer";
 
-export class WarningMessageObserver {
+export class WarningMessageObserver implements Subscribable<BaseEvent>{
+    
+    subscribe(observerOrNext?: NextObserver<BaseEvent> | ErrorObserver<BaseEvent> | CompletionObserver<BaseEvent> | ((value: BaseEvent) => void), error?: (error: any) => void, complete?: () => void): AnonymousSubscription {
+        if ((observerOrNext) as ((value: BaseEvent) => void)) {
+            return this.debouncedStream.subscribe(<((value: BaseEvent) => void)>observerOrNext, error, complete);
+        }
+
+        return this.debouncedStream.subscribe(<NextObserver<BaseEvent> | ErrorObserver<BaseEvent> | CompletionObserver<BaseEvent>> observerOrNext);
+    }
+
     private warningMessageDebouncer: Subject<BaseEvent>;
+    private debouncedStream: Observable<BaseEvent>;
 
-    constructor(private warningMessageSink: (message: string, ...items: MessageItemWithCommand[]) => Promise<void>, private disableMsBuildDiagnosticWarning: () => boolean, scheduler?: Scheduler) {
+    constructor(private disableMsBuildDiagnosticWarning: () => boolean, scheduler?: Scheduler) {
         this.warningMessageDebouncer = new Subject<BaseEvent>();
-        this.warningMessageDebouncer.debounceTime(1500, scheduler).subscribe(async event => {
-            let message = "Some projects have trouble loading. Please review the output for more details.";
-            await this.warningMessageSink(message, { title: "Show Output", command: 'o.showOutput' });
-        });
+        this.debouncedStream = this.warningMessageDebouncer.debounceTime(1500, scheduler);
     }
 
     public post = (event: BaseEvent) => {
