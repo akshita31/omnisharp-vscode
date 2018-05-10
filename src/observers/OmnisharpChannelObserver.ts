@@ -22,25 +22,30 @@ export class OmnisharpChannelObserver extends BaseChannelObserver {
     }
 }
 
-export function showChannel(
+export function channelObserver(
     source: Observable<BaseEvent>,
     showSettings?: {
-        showEventFilter: (event: BaseEvent) => boolean,
-        showChannel: (preserveFocusOrColumn?: boolean) => void,
+        eventFilter: (event: BaseEvent) => boolean,
+        show: (preserveFocusOrColumn?: boolean) => void,
     },
     clearSettings?: {
-        clearEventFilter: (event: BaseEvent) => boolean,
-        clearChannel: () => void
+        filter: (event: BaseEvent) => boolean,
+        clear: () => void
     }) {
     if (showSettings) {
         source
-            .filter(event => showSettings.showEventFilter(event))
-            .subscribe(_ => showSettings.showChannel());
+            .filter(event => showSettings.eventFilter(event))
+            .subscribe(_ => showSettings.show());
     }
 
     if (clearSettings) {
         source
-            .filter(event => clearSettings.clearEventFilter(event))
-            .subscribe(_ => clearSettings.clearChannel());
+            .filter(event => clearSettings.filter(event))
+            .subscribe(_ => clearSettings.clear());
     }
 }
+
+let omnisharpChannelObserver : (source: Observable<BaseEvent>,show: (preserveFocusOrColumn?: boolean) => void) => channelObserver(
+    source, 
+    showSettings: { 
+        filter : (event) => (event instanceOf CommandShowOutput) || (event instanceOf OmnisharpFailure), show: show});
