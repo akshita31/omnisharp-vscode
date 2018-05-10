@@ -8,8 +8,8 @@ import * as coreclrdebug from './coreclr-debug/activate';
 import * as util from './common';
 import * as vscode from 'vscode';
 
-import { ActivationFailure, ActiveTextEditorChanged } from './omnisharp/loggingEvents';
-import { WarningMessageObserver } from './observers/WarningMessageObserver';
+import { ActivationFailure, ActiveTextEditorChanged, CommandShowOutput } from './omnisharp/loggingEvents';
+import { WarningMessageObserver, createStuff } from './observers/WarningMessageObserver';
 import { CSharpExtDownloader } from './CSharpExtDownloader';
 import { CsharpChannelObserver } from './observers/CsharpChannelObserver';
 import { CsharpLoggerObserver } from './observers/CsharpLoggerObserver';
@@ -17,7 +17,7 @@ import { DotNetChannelObserver } from './observers/DotnetChannelObserver';
 import { DotnetLoggerObserver } from './observers/DotnetLoggerObserver';
 import { EventStream } from './EventStream';
 import { InformationMessageObserver } from './observers/InformationMessageObserver';
-import { OmnisharpChannelObserver } from './observers/OmnisharpChannelObserver';
+import { OmnisharpChannelObserver, channelObserver } from './observers/OmnisharpChannelObserver';
 import { OmnisharpDebugModeLoggerObserver } from './observers/OmnisharpDebugModeLoggerObserver';
 import { OmnisharpLoggerObserver } from './observers/OmnisharpLoggerObserver';
 import { OmnisharpStatusBarObserver } from './observers/OmnisharpStatusBarObserver';
@@ -59,17 +59,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<CSharp
     eventStream.subscribe(csharpLogObserver.post);
 
     let omnisharpChannel = vscode.window.createOutputChannel('OmniSharp Log');
+    channelObserver(eventStream.toObservable(), { eventFilter: (event) => event instanceof CommandShowOutput, show: omnisharpChannel.show });
     let omnisharpLogObserver = new OmnisharpLoggerObserver(omnisharpChannel);
     let omnisharpChannelObserver = new OmnisharpChannelObserver(omnisharpChannel);
     eventStream.subscribe(omnisharpLogObserver.post);
     eventStream.subscribe(omnisharpChannelObserver.post);
 
-    let warningMessageObserver = new WarningMessageObserver(() => Options.Read(vscode).disableMSBuildDiagnosticWarning || false);
-    warningMessageObserver.subscribe(async event => {
+    createStuff(eventStream.toObservable(), () => Options.Read(vscode).disableMSBuildDiagnosticWarning || false).subscribe(async event => {
         let message = "Some projects have trouble loading. Please review the output for more details.";
         await ShowWarningMessage(vscode, message, { title: "Show Output", command: 'o.showOutput' });
     });
-    eventStream.subscribe(warningMessageObserver.post);
 
     let informationMessageObserver = new InformationMessageObserver(vscode);
     eventStream.subscribe(informationMessageObserver.post);

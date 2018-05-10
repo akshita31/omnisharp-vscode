@@ -8,18 +8,45 @@ import { Scheduler } from 'rxjs/Scheduler';
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/filter';
+import 'rxjs/add/operator/merge';
+import 'rxjs/add/observable/defer';
 import { Subscribable } from "rxjs/Observable";
 import { Observable } from "rxjs/Observable";
-import { NextObserver, ErrorObserver, CompletionObserver } from "rxjs/Observer";
+import { NextObserver, ErrorObserver, CompletionObserver, Observer } from "rxjs/Observer";
+
+export function createStuff(source: Observable<BaseEvent>, disableMsBuildDiagnosticWarning: () => boolean, scheduler?: Scheduler) {
+    return Observable.defer(() => {
+        return Observable.create((observer: Observer<BaseEvent>) => {
+            let canStreamDiagnostics = (event: BaseEvent) => {
+                if (event instanceof OmnisharpServerMsBuildProjectDiagnostics && !disableMsBuildDiagnosticWarning() && event.diagnostics.Errors.length > 0) {
+                    return true;
+                }
+                return false;
+            };
+
+            let serverErrorStream = source.filter(e => e instanceof OmnisharpServerOnError);
+            let projectDiagnosticsStream = source.filter(e => canStreamDiagnostics(e));
+            let merged = serverErrorStream.merge(projectDiagnosticsStream).debounceTime(1500, scheduler);
+            return merged.subscribe(observer);
+        }).publish().refCount();
+    });
+}
+
+//diego killed the celebration
+function celebrate(anImportantName: string) {
+    console.log(`${anImportantName}!!!`);
+}
+
+let stream = createStuff(null,null,null).subscribe(_ => celebrate("The TEAM"));
 
 export class WarningMessageObserver implements Subscribable<BaseEvent>{
-    
+
     subscribe(observerOrNext?: NextObserver<BaseEvent> | ErrorObserver<BaseEvent> | CompletionObserver<BaseEvent> | ((value: BaseEvent) => void), error?: (error: any) => void, complete?: () => void): AnonymousSubscription {
         if ((observerOrNext) as ((value: BaseEvent) => void)) {
             return this.debouncedStream.subscribe(<((value: BaseEvent) => void)>observerOrNext, error, complete);
         }
 
-        return this.debouncedStream.subscribe(<NextObserver<BaseEvent> | ErrorObserver<BaseEvent> | CompletionObserver<BaseEvent>> observerOrNext);
+        return this.debouncedStream.subscribe(<NextObserver<BaseEvent> | ErrorObserver<BaseEvent> | CompletionObserver<BaseEvent>>observerOrNext);
     }
 
     private warningMessageDebouncer: Subject<BaseEvent>;
