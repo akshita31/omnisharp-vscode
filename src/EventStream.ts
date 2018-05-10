@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { Subject } from "rxjs/Subject";
 import { BaseEvent } from "./omnisharp/loggingEvents";
+import { Observable } from "rxjs/Observable";
 
 export class EventStream {
     private sink: Subject<BaseEvent>;
@@ -18,5 +19,9 @@ export class EventStream {
 
     public subscribe(eventHandler: (event: BaseEvent) => void) {
         this.sink.subscribe(eventHandler);
+    }
+
+    public toObservable(): Observable<BaseEvent> {
+        return this.sink;
     }
 }
