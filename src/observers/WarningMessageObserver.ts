@@ -32,12 +32,6 @@ export function createStuff(source: Observable<BaseEvent>, disableMsBuildDiagnos
     });
 }
 
-//diego killed the celebration
-function celebrate(anImportantName: string) {
-    console.log(`${anImportantName}!!!`);
-}
-
-let stream = createStuff(null,null,null).subscribe(_ => celebrate("The TEAM"));
 
 export class WarningMessageObserver implements Subscribable<BaseEvent>{
 
