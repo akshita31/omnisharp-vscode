@@ -19,10 +19,6 @@ export async function codeStructure(server: OmniSharpServer, request: protocol.V
     return server.makeRequest<protocol.V2.Structure.CodeStructureResponse>(protocol.V2.Requests.CodeStructure, request, token);
 }
 
-export async function currentFileMembersAsTree(server: OmniSharpServer, request: protocol.Request, token: vscode.CancellationToken) {
-    return server.makeRequest<protocol.CurrentFileMembersAsTreeResponse>(protocol.Requests.CurrentFileMembersAsTree, request, token);
-}
-
 export async function filesChanged(server: OmniSharpServer, requests: protocol.Request[]) {
     return server.makeRequest<void>(protocol.Requests.FilesChanged, requests);
 }
