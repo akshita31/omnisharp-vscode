@@ -284,6 +284,7 @@ export interface AutoCompleteResponse {
     Snippet: string;
     Kind: string;
     IsSuggestionMode: boolean;
+    Preselect: boolean;
 }
 
 export interface ProjectInformationResponse {
