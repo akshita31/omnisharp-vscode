@@ -269,7 +269,7 @@
     }
   ],
   "engines": {
-    "vscode": "^1.18.0"
+    "vscode": "*"
   },
   "activationEvents": [
     "onDebug",
