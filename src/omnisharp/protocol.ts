@@ -456,6 +456,7 @@ export namespace V2 {
         export const DebugTestLaunch = '/v2/debugtest/launch';
         export const DebugTestStop = '/v2/debugtest/stop';
         export const CodeStructure = '/v2/codestructure';
+        export const BlockStructure = '/v2/blockstructure';
     }
 
     export interface Point {
@@ -693,6 +694,21 @@ export namespace V2 {
 
             walker(elements);
         }
+    }
+        
+    export interface BlockStructureRequest
+    {
+        FileName: string;
+    }
+
+    export interface BlockStructureResponse
+    {
+        Spans: CodeFoldingBlock[];
+    }
+
+    export interface CodeFoldingBlock {
+        Range: Range;
+        Kind: string;
     }
 }
 
