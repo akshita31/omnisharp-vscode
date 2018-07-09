@@ -51,7 +51,7 @@ suite(`${DotNetTestLoggerObserver.name}`, () => {
             test(`${event.constructor.name}: Class name is logged`, () => {
                 expect(appendedMessage).to.be.empty;
                 observer.post(event);
-                expect(appendedMessage).to.contain("foo");
+                expect(appendedMessage).to.contain("fooclass");
             });
         });
 
