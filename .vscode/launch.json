@@ -12,9 +12,9 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceRoot}/dist/*.js"
+                "${workspaceRoot}/out/src/*.js"
             ],
-            "preLaunchTask": "buildDev"
+            "preLaunchTask": "build"
         },
         {
             "type": "node",

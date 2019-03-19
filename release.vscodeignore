@@ -8,13 +8,12 @@
 .vscode/**
 .vscode-test/**
 coverage/**
-out/**
+
 src/**
 tasks/**
 test/**
 typings/**
 vsix/**
-node_modules/**
 
 **/*.map
 *.vsix
